@@ -26,28 +26,36 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 import httpx
 import redis
-# Optional imports - handled dynamically to prevent module load failures
+# Kafka availability check - no imports at module level
 KAFKA_AVAILABLE = False
 KafkaProducer = None
 KafkaConsumer = None
 
-def _init_kafka():
-    """Initialize Kafka imports if available."""
-    global KAFKA_AVAILABLE, KafkaProducer, KafkaConsumer
-    try:
-        from kafka import KafkaProducer as KP, KafkaConsumer as KC
-        KafkaProducer = KP
-        KafkaConsumer = KC
-        KAFKA_AVAILABLE = True
-        return True
-    except ImportError:
-        KAFKA_AVAILABLE = False
-        KafkaProducer = None
-        KafkaConsumer = None
-        return False
+def get_kafka_producer():
+    """Get Kafka producer if available, otherwise return None."""
+    global KAFKA_AVAILABLE, KafkaProducer
+    if not KAFKA_AVAILABLE:
+        try:
+            import kafka
+            from kafka import KafkaProducer as KP
+            KafkaProducer = KP
+            KAFKA_AVAILABLE = True
+        except ImportError:
+            return None
+    return KafkaProducer
 
-# Try to initialize Kafka
-_init_kafka()
+def get_kafka_consumer():
+    """Get Kafka consumer if available, otherwise return None."""
+    global KafkaConsumer
+    if not KAFKA_AVAILABLE:
+        return None
+    try:
+        if KafkaConsumer is None:
+            from kafka import KafkaConsumer as KC
+            KafkaConsumer = KC
+    except ImportError:
+        return None
+    return KafkaConsumer
 
 # Optional aiohttp import
 try:
@@ -136,21 +144,22 @@ async def lifespan(app: FastAPI):
     
     # Initialize Kafka producer if available
     global kafka_producer
-    if not KAFKA_AVAILABLE:
-        logger.info("ℹ️ Kafka not available - running without message queue")
-        kafka_producer = None
-    else:
-        try:
-            kafka_producer = KafkaProducer(
+    try:
+        KafkaProducerClass = get_kafka_producer()
+        if KafkaProducerClass is None:
+            logger.info("ℹ️ Kafka not available - running without message queue")
+            kafka_producer = None
+        else:
+            kafka_producer = KafkaProducerClass(
                 bootstrap_servers=[config.KAFKA_BOOTSTRAP_SERVERS],
                 value_serializer=lambda v: json.dumps(v).encode('utf-8'),
                 retries=3,
                 retry_backoff_ms=1000
             )
             logger.info("✅ Kafka producer initialized")
-        except Exception as e:
-            logger.warning(f"⚠️ Kafka connection failed: {e}")
-            kafka_producer = None
+    except Exception as e:
+        logger.warning(f"⚠️ Kafka connection failed: {e}")
+        kafka_producer = None
     
     logger.info("🌟 WealthForge API started successfully")
     
