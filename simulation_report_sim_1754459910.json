@@ -1,0 +1,212 @@
+{
+  "simulation_id": "sim_1754459910",
+  "timestamp": "2025-08-05T22:58:30.617285",
+  "execution_summary": {
+    "total_execution_time": 0.004784822463989258,
+    "component_times": {
+      "parsing": 0.004479885101318359,
+      "arena": 2.09808349609375e-05,
+      "synthesis": 0.0002009868621826172,
+      "compliance": 5.316734313964844e-05,
+      "optimization": 2.9802322387695312e-05
+    },
+    "components_executed": 5,
+    "success_rate": 1.0
+  },
+  "complete_analysis": {
+    "client_profile": {
+      "goals": {
+        "strategy": "aggressive growth",
+        "timeline": "7 years",
+        "target_amount": 57829,
+        "risk_tolerance": "high",
+        "secondary_goals": [
+          "Early Retirement"
+        ]
+      },
+      "constraints": {
+        "capital": 15000,
+        "contributions": 300,
+        "contribution_frequency": "monthly",
+        "max_risk_percentage": 85,
+        "liquidity_needs": "low",
+        "monthly_expenses": 2916,
+        "tax_optimization_priority": "medium"
+      },
+      "additional_preferences": {
+        "age": 25,
+        "ira_contributions": 1800.0,
+        "401k_contributions": 1800.0,
+        "esg_investing": false,
+        "sector_focus": [
+          "Technology",
+          "Healthcare"
+        ],
+        "international_exposure": "high",
+        "alternative_investments": true,
+        "impact_investing": false
+      },
+      "financial_info": {
+        "annual_income": 50000,
+        "net_worth": 20000,
+        "liquid_assets": 15000,
+        "investment_experience": "intermediate",
+        "risk_capacity": "high",
+        "time_horizon": "long-term"
+      }
+    },
+    "arena_result": {
+      "strategies_generated": 50,
+      "winner": {
+        "agent_name": "AggressiveGrowthSpecialist-47",
+        "agent_role": "High-Risk Growth Optimizer",
+        "alpha_score": 0.8745
+      },
+      "execution_time": 2.09808349609375e-05,
+      "top_strategies": [],
+      "simulation_mode": true
+    },
+    "portfolio_synthesis": {
+      "portfolio_id": "portfolio-sim_1754459910",
+      "final_allocation": {
+        "US_STOCKS": 0.7,
+        "INTL_STOCKS": 0.15,
+        "BONDS": 0.1,
+        "ALTERNATIVES": 0.05
+      },
+      "expected_return": 0.085,
+      "risk_score": 0.18,
+      "sharpe_ratio": 0.47,
+      "synthesis_confidence": 0.92,
+      "contributing_agents": [
+        "AggressiveGrowthSpecialist-47"
+      ],
+      "optimization_method": "pareto_optimal",
+      "risk_analysis": {
+        "volatility": 0.16,
+        "var_95": -0.045,
+        "max_drawdown": 0.25,
+        "beta": 1.15
+      },
+      "cost_analysis": {
+        "total_expense_ratio": 0.0075,
+        "tax_efficiency_score": 0.85,
+        "fee_optimization_savings": 0.0025
+      },
+      "simulation_mode": true
+    },
+    "compliance_audit": {
+      "audit_id": "audit-sim_1754459910",
+      "overall_compliance": "compliant",
+      "audit_score": 88,
+      "requires_manual_review": false,
+      "capital_validation": {
+        "compliance_status": "compliant",
+        "total_capital": 15000,
+        "investment_capital": 12750.0,
+        "warnings": []
+      },
+      "contribution_validation": {
+        "compliance_status": "compliant",
+        "ira_contributions": 1800.0,
+        "ira_limit": 6500,
+        "violations": []
+      },
+      "regulatory_analysis": {
+        "client_classification": "retail_investor",
+        "regulatory_risk_score": 0.15,
+        "applicable_regulations": [
+          "Regulation BI",
+          "Know Your Customer"
+        ],
+        "suitability_assessment": {
+          "risk_alignment": "suitable"
+        }
+      },
+      "violations": [],
+      "recommendations": [
+        "Consider increasing emergency fund",
+        "Monitor risk exposure quarterly"
+      ],
+      "simulation_mode": true
+    },
+    "optimization": {
+      "optimization_id": "opt-sim_1754459910",
+      "original_goal_probability": 0.62,
+      "optimized_goal_probability": 0.85,
+      "improvement_factor": 1.37,
+      "recommended_scenarios": [
+        {
+          "scenario_id": "scenario-1",
+          "scenario_name": "Aggressive Contribution Increase",
+          "probability_of_success": 0.89,
+          "excess_achievement": 0.23,
+          "implementation_score": 0.75,
+          "time_to_goal": 6.2,
+          "adjustments": [
+            {
+              "adjustment_type": "monthly_contribution",
+              "description": "Increase monthly contributions from $300 to $450",
+              "current_value": 300,
+              "suggested_value": 450,
+              "impact_magnitude": 0.28,
+              "implementation_difficulty": 0.4
+            }
+          ]
+        }
+      ],
+      "sensitivity_analysis": {
+        "capital": {
+          "sensitivity_coefficient": 0.0145,
+          "elasticity": 0.92,
+          "critical_threshold": 10000,
+          "risk_factors": [
+            "Market volatility",
+            "Liquidity constraints"
+          ]
+        },
+        "contributions": {
+          "sensitivity_coefficient": 0.0823,
+          "elasticity": 1.67,
+          "critical_threshold": 200,
+          "risk_factors": [
+            "Income stability",
+            "Expense inflation"
+          ]
+        }
+      },
+      "implementation_roadmap": "Phase 1 (Months 1-3): Increase monthly contributions to $450\nPhase 2 (Months 4-12): Optimize asset allocation for aggressive growth\nPhase 3 (Years 2-7): Monitor and rebalance quarterly, increase contributions with income growth",
+      "risk_assessment": {
+        "optimization_risk": "moderate",
+        "implementation_complexity": "low",
+        "success_probability": 0.85
+      },
+      "simulation_mode": true
+    }
+  },
+  "key_insights": {
+    "portfolio": {
+      "expected_annual_return": "8.5%",
+      "risk_score": "18.0%",
+      "sharpe_ratio": "0.47",
+      "primary_allocation": "US_STOCKS"
+    },
+    "compliance": {
+      "overall_status": "compliant",
+      "audit_score": "88/100",
+      "violations": 0,
+      "manual_review_required": false
+    },
+    "optimization": {
+      "goal_probability_improvement": "62.0% \u2192 85.0%",
+      "improvement_factor": "1.37x",
+      "recommended_scenarios": 1
+    }
+  },
+  "recommendations": [
+    "Portfolio shows strong growth potential with 8.5% expected return",
+    "Primary recommendation: Increase monthly contributions from $300 to $450",
+    "Consider increasing emergency fund",
+    "Monitor risk exposure quarterly"
+  ]
+}
