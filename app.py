@@ -26,15 +26,71 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 import httpx
 import redis
-from kafka import KafkaProducer, KafkaConsumer
-import aiohttp
+# Optional imports - handled dynamically to prevent module load failures
+KAFKA_AVAILABLE = False
+KafkaProducer = None
+KafkaConsumer = None
 
-# Import WealthForge components
-from goal_constraint_parser import parse_goal_constraints
-from strategy_optimization_arena import run_strategy_optimization, AgentStrategy, MarketData
-from portfolio_surgeon import synthesize_optimal_portfolio, PortfolioSynthesis
-from constraint_compliance_auditor import perform_compliance_audit, ComplianceAuditReport
-from fine_tuning_engine import optimize_goal_exceedance, OptimizationStrategy, OptimizationResult
+def _init_kafka():
+    """Initialize Kafka imports if available."""
+    global KAFKA_AVAILABLE, KafkaProducer, KafkaConsumer
+    try:
+        from kafka import KafkaProducer as KP, KafkaConsumer as KC
+        KafkaProducer = KP
+        KafkaConsumer = KC
+        KAFKA_AVAILABLE = True
+        return True
+    except ImportError:
+        KAFKA_AVAILABLE = False
+        KafkaProducer = None
+        KafkaConsumer = None
+        return False
+
+# Try to initialize Kafka
+_init_kafka()
+
+# Optional aiohttp import
+try:
+    import aiohttp
+except ImportError:
+    aiohttp = None
+
+# Import WealthForge components (with fallbacks for production)
+try:
+    from goal_constraint_parser import parse_goal_constraints
+except ImportError:
+    def parse_goal_constraints(*args, **kwargs):
+        return {"error": "Goal constraint parser not available"}
+
+try:
+    from strategy_optimization_arena import run_strategy_optimization, AgentStrategy, MarketData
+except ImportError:
+    def run_strategy_optimization(*args, **kwargs):
+        return {"error": "Strategy optimization not available"}
+    AgentStrategy = dict
+    MarketData = dict
+
+try:
+    from portfolio_surgeon import synthesize_optimal_portfolio, PortfolioSynthesis
+except ImportError:
+    def synthesize_optimal_portfolio(*args, **kwargs):
+        return {"error": "Portfolio synthesis not available"}
+    PortfolioSynthesis = dict
+
+try:
+    from constraint_compliance_auditor import perform_compliance_audit, ComplianceAuditReport
+except ImportError:
+    def perform_compliance_audit(*args, **kwargs):
+        return {"error": "Compliance audit not available"}
+    ComplianceAuditReport = dict
+
+try:
+    from fine_tuning_engine import optimize_goal_exceedance, OptimizationStrategy, OptimizationResult
+except ImportError:
+    def optimize_goal_exceedance(*args, **kwargs):
+        return {"error": "Optimization engine not available"}
+    OptimizationStrategy = dict
+    OptimizationResult = dict
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -47,7 +103,14 @@ class Config:
     KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
     SECRET_KEY = os.getenv("SECRET_KEY", "wealthforge-secret-key-change-in-production")
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+        ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+    
+    def __init__(self):
+        """Log configuration on startup for debugging."""
+        logger.info(f"🔧 Environment: {self.ENVIRONMENT}")
+        logger.info(f"🔧 Redis URL: {'***configured***' if self.REDIS_URL != 'redis://localhost:6379' else 'default'}")
+        logger.info(f"🔧 Polygon API: {'***configured***' if self.POLYGON_API_KEY != 'YOUR_POLYGON_API_KEY_HERE' else 'default'}")
+        logger.info(f"🔧 FRED API: {'***configured***' if self.FRED_API_KEY != 'YOUR_FRED_API_KEY_HERE' else 'default'}")
 
 config = Config()
 
@@ -71,19 +134,23 @@ async def lifespan(app: FastAPI):
         logger.warning(f"⚠️ Redis connection failed: {e}")
         redis_client = None
     
-    # Initialize Kafka producer
+    # Initialize Kafka producer if available
     global kafka_producer
-    try:
-        kafka_producer = KafkaProducer(
-            bootstrap_servers=[config.KAFKA_BOOTSTRAP_SERVERS],
-            value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-            retries=3,
-            retry_backoff_ms=1000
-        )
-        logger.info("✅ Kafka producer initialized")
-    except Exception as e:
-        logger.warning(f"⚠️ Kafka connection failed: {e}")
+    if not KAFKA_AVAILABLE:
+        logger.info("ℹ️ Kafka not available - running without message queue")
         kafka_producer = None
+    else:
+        try:
+            kafka_producer = KafkaProducer(
+                bootstrap_servers=[config.KAFKA_BOOTSTRAP_SERVERS],
+                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                retries=3,
+                retry_backoff_ms=1000
+            )
+            logger.info("✅ Kafka producer initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ Kafka connection failed: {e}")
+            kafka_producer = None
     
     logger.info("🌟 WealthForge API started successfully")
     
@@ -115,7 +182,11 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if config.ENVIRONMENT == "development" else ["https://yourdomain.com"],
+    allow_origins=["*"] if config.ENVIRONMENT == "development" else [
+        "https://yourdomain.com",
+        "https://wealthforge-frontend.vercel.app",
+        "https://*.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -453,18 +524,35 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    health_status = {
-        "api": "healthy",
-        "redis": "connected" if redis_client else "disconnected",
-        "kafka": "connected" if kafka_producer else "disconnected",
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    
-    return APIResponse(
-        success=True,
-        message="Health check completed",
-        data=health_status
-    )
+    try:
+        # Test Redis connection if available
+        redis_status = "disconnected"
+        if redis_client:
+            try:
+                await asyncio.get_event_loop().run_in_executor(None, redis_client.ping)
+                redis_status = "connected"
+            except Exception:
+                redis_status = "error"
+        
+        health_status = {
+            "api": "healthy",
+            "redis": redis_status,
+            "kafka": "available" if kafka_producer else "unavailable",
+            "environment": config.ENVIRONMENT,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        return APIResponse(
+            success=True,
+            message="Health check completed",
+            data=health_status
+        )
+    except Exception as e:
+        return APIResponse(
+            success=False,
+            message=f"Health check failed: {str(e)}",
+            data={"api": "unhealthy", "error": str(e)}
+        )
 
 @app.post("/api/v1/parse-goals", response_model=APIResponse)
 async def parse_client_goals(
@@ -1198,10 +1286,11 @@ async def complete_analysis_api(
         )
 
 if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=True if config.ENVIRONMENT == "development" else False,
         workers=1 if config.ENVIRONMENT == "development" else 4
     )

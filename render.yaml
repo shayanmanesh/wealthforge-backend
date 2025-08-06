@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: wealthforge-backend
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ENVIRONMENT
+        value: production
+      - key: POLYGON_API_KEY
+        sync: false
+      - key: FRED_API_KEY
+        sync: false
+      - key: KAFKA_BOOTSTRAP_SERVERS
+        value: localhost:9092
+      - key: REDIS_URL
+        value: redis://localhost:6379
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+    healthCheckPath: /health
+    autoDeploy: true
+    region: oregon
+    scaling:
+      minInstances: 1
+      maxInstances: 3
