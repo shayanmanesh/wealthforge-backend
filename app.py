@@ -111,7 +111,7 @@ class Config:
     KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
     SECRET_KEY = os.getenv("SECRET_KEY", "wealthforge-secret-key-change-in-production")
-        ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
     
     def __init__(self):
         """Log configuration on startup for debugging."""
